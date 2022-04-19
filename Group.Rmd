@@ -1,0 +1,61 @@
+---
+title: "Group Project"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+Sys.setlocale(locale="English")
+```
+  
+```{r}
+library(tidyverse)
+library(tidytext)
+books <- read.csv("AllBooksContent.csv")
+books <- books[-c(1,2), ]
+str(books)
+```
+
+There are 28 books in the dataset.
+```{r}
+length(unique(books$book))
+```
+
+
+Tokenize all six books and remove the stop words.
+```{r}
+tidy_books <- books %>%
+  unnest_tokens(word, text) %>%
+  anti_join(stop_words) %>%
+  filter(grepl('^[a-zA-Z]+$', word)) %>%
+  filter(!word %in% c("br"))
+```
+
+Count the number of words left after removing stop words, plot the top 10 words in the book.
+
+
+```{r}
+tidy_books %>%
+  count(word, sort = TRUE) %>%
+  head(10) %>%
+  mutate(word = reorder(word, n)) %>%  # sort from high to low on n
+  ggplot(aes(n, word)) +                   # run ggplot on data
+  geom_col(fill="orange") +                         # notice ggplot uses + signs
+  labs(y = NULL)
+```
+
+The word "data" occured the most times, the second word is "function", the third word is "model".
+
+Find the top 5 words in each book.
+```{r fig.width=10}
+tidy_books %>% group_by(book) %>%
+  count(word, sort = TRUE) %>% 
+  arrange(book) %>%
+  top_n(5, n) %>%
+  ggplot(aes(x = fct_reorder(word, n), y = n, fill = book)) + 
+      geom_bar(stat = "identity", na.rm = TRUE, show.legend = FALSE) +
+      xlab("word") +
+      facet_wrap(~book, scales = "free") +
+      coord_flip()
+```
+
