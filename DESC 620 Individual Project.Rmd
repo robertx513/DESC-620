@@ -1,0 +1,50 @@
+---
+title: "Robert Xu's Individual Project"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# 1 
+This is where I scrape all links from the left navigation menu of the book's website.
+```{r}
+library(rvest)
+page <- read_html("https://bookdown.org/ndphillips/YaRrr/")
+nav <- html_nodes(page, "nav")
+links <- html_nodes(nav, "a")
+urls <- html_attr(links, "href")
+urls[1] <- ""
+urls <- paste0("https://bookdown.org/ndphillips/YaRrr/", urls)
+head(urls)
+```
+
+# 2 
+This is where I scrape content from the single page.
+```{r}
+getContent <- function(url){
+  page = read_html(url)
+  div = html_node(page, "div.page-inner")
+  content <- html_text(div)
+  content
+}
+getContent(urls[1])
+```
+
+# 3
+This is where I scrape the contents from all the pages of that book.
+```{r}
+text <- c()
+for(i in 1:length(urls)){
+  content <- getContent(urls[i])
+  text <- paste(text, content)
+}
+substr(text, 1, 100)
+```
+
+```{r}
+writeLines(text, file("book.txt"))
+```
+
